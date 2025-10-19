@@ -9,12 +9,22 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # ALLOWED_HOSTS configuration for Railway deployment
 import os
-if os.environ.get('RAILWAY_ENVIRONMENT'):
-    # Railway deployment - allow all Railway domains
+
+# Check if we're on Railway (multiple ways to detect)
+is_railway = (
+    os.environ.get('RAILWAY_ENVIRONMENT') or 
+    os.environ.get('RAILWAY_PROJECT_ID') or 
+    os.environ.get('PORT')  # Railway always sets PORT
+)
+
+if is_railway:
+    # Railway deployment - allow all domains
     ALLOWED_HOSTS = ['*']
+    print("🚀 Railway deployment detected - ALLOWED_HOSTS set to ['*']")
 else:
     # Local development
     ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2', cast=lambda v: [s.strip() for s in v.split(',')])
+    print("🏠 Local development - using specific ALLOWED_HOSTS")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
