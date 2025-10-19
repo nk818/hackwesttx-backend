@@ -1,14 +1,23 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+import os
 
 def api_root(request):
     return JsonResponse({
         'message': 'HackWestTX Class Portfolio API',
         'version': '2.0.0',
         'description': 'Comprehensive backend for Class Portfolio management system',
+        'railway_debug': {
+            'port': os.environ.get('PORT', 'NOT SET'),
+            'railway_env': os.environ.get('RAILWAY_ENVIRONMENT', 'NOT SET'),
+            'railway_project': os.environ.get('RAILWAY_PROJECT_ID', 'NOT SET'),
+            'django_settings': os.environ.get('DJANGO_SETTINGS_MODULE', 'NOT SET'),
+            'debug': os.environ.get('DEBUG', 'NOT SET')
+        },
         'endpoints': {
             'health': '/api/health/',
+            'debug': '/debug/',
             'auth': {
                 'register': '/api/auth/register/',
                 'login': '/api/auth/login/',
@@ -101,8 +110,24 @@ def api_root(request):
         'documentation': 'See README.md for detailed API documentation'
     })
 
+def debug_view(request):
+    """Debug endpoint to check Railway deployment"""
+    return JsonResponse({
+        'status': 'Django is running!',
+        'railway_debug': {
+            'port': os.environ.get('PORT', 'NOT SET'),
+            'railway_env': os.environ.get('RAILWAY_ENVIRONMENT', 'NOT SET'),
+            'railway_project': os.environ.get('RAILWAY_PROJECT_ID', 'NOT SET'),
+            'django_settings': os.environ.get('DJANGO_SETTINGS_MODULE', 'NOT SET'),
+            'debug': os.environ.get('DEBUG', 'NOT SET'),
+            'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'NOT SET')
+        },
+        'message': 'If you see this, Django is working on Railway!'
+    })
+
 urlpatterns = [
     path('', api_root, name='api-root'),
+    path('debug/', debug_view, name='debug'),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
