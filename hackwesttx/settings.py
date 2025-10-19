@@ -7,7 +7,14 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2,healthcheck.railway.app,*.railway.app', cast=lambda v: [s.strip() for s in v.split(',')])
+# ALLOWED_HOSTS configuration for Railway deployment
+import os
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    # Railway deployment - allow all Railway domains
+    ALLOWED_HOSTS = ['*']
+else:
+    # Local development
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2', cast=lambda v: [s.strip() for s in v.split(',')])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
