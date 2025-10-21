@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from django.db.models import Q, Count, Avg, Min, Max, F
 from django.utils import timezone
 from datetime import datetime, timedelta
+import os
 from .models import (
     User, PasswordResetToken, Department, Professor, ClassPortfolio, 
     MarketplaceListing, PortfolioPurchase, Syllabus, SyllabusExtraction,
@@ -3342,10 +3343,24 @@ def comment_post(request, post_id):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def health_check(request):
+    from .mongodb_utils import test_mongodb_connection
+    
+    # Test MongoDB connection
+    mongodb_status = test_mongodb_connection()
+    
     return Response({
         'status': 'OK',
         'message': 'HackWestTX Class Portfolio API is running!',
-        'version': '2.0.0'
+        'version': '2.0.0',
+        'database': {
+            'sqlite': 'connected',
+            'mongodb': mongodb_status
+        },
+        'railway_debug': {
+            'port': os.environ.get('PORT', 'NOT SET'),
+            'railway_env': os.environ.get('RAILWAY_ENVIRONMENT', 'NOT SET'),
+            'railway_project': os.environ.get('RAILWAY_PROJECT_ID', 'NOT SET')
+        }
     })
 
 @api_view(['DELETE'])

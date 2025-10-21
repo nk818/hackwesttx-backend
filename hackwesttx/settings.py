@@ -125,3 +125,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # OpenAI API Key for file processing and summarization
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+
+# MongoDB Configuration
+MONGODB_URI = config('MONGODB_URI', default='mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')

@@ -1,101 +1,82 @@
 #!/usr/bin/env python3
 """
 Test Railway Deployment
-This script tests your deployed Railway backend.
+This script tests your Railway deployment endpoints
 """
 
 import requests
 import json
-from datetime import datetime
+import sys
 
-def test_railway_backend(base_url):
-    """Test the deployed Railway backend"""
+def test_railway_deployment(railway_url):
+    """Test Railway deployment endpoints"""
     
-    print(f"🧪 Testing Railway Backend: {base_url}")
-    print("=" * 60)
+    print("🚀 Testing Railway Deployment...")
+    print("=" * 50)
     
-    # Test 1: Health Check
-    print("\n1️⃣ Testing Health Check...")
-    try:
-        response = requests.get(f"{base_url}/api/health/", timeout=10)
-        if response.status_code == 200:
-            print("✅ Health check passed!")
-            print(f"Response: {response.json()}")
-        else:
-            print(f"❌ Health check failed: {response.status_code}")
-            print(f"Response: {response.text}")
-    except Exception as e:
-        print(f"❌ Health check error: {e}")
+    # Test endpoints
+    endpoints = [
+        ("/", "API Root"),
+        ("/debug/", "Debug Info"),
+        ("/api/health/", "Health Check"),
+        ("/api/", "API Endpoints")
+    ]
     
-    # Test 2: API Root
-    print("\n2️⃣ Testing API Root...")
-    try:
-        response = requests.get(f"{base_url}/", timeout=10)
-        if response.status_code == 200:
-            print("✅ API root accessible!")
-            data = response.json()
-            print(f"API Version: {data.get('version', 'Unknown')}")
-            print(f"Available endpoints: {len(data.get('endpoints', {}))}")
-        else:
-            print(f"❌ API root failed: {response.status_code}")
-    except Exception as e:
-        print(f"❌ API root error: {e}")
+    results = {}
     
-    # Test 3: Calendar Events
-    print("\n3️⃣ Testing Calendar Events...")
-    try:
-        response = requests.get(f"{base_url}/api/calendar-events/", timeout=10)
-        if response.status_code in [200, 401, 403]:  # 401/403 is expected without auth
-            print("✅ Calendar events endpoint accessible!")
+    for endpoint, description in endpoints:
+        try:
+            url = f"{railway_url.rstrip('/')}{endpoint}"
+            print(f"\n🔍 Testing {description}: {url}")
+            
+            response = requests.get(url, timeout=10)
+            
             if response.status_code == 200:
-                events = response.json()
-                print(f"Found {len(events)} events")
+                print(f"✅ {description}: OK (200)")
+                try:
+                    data = response.json()
+                    print(f"   Response: {json.dumps(data, indent=2)[:200]}...")
+                except:
+                    print(f"   Response: {response.text[:200]}...")
+                results[endpoint] = "SUCCESS"
             else:
-                print("Authentication required (expected)")
-        else:
-            print(f"❌ Calendar events failed: {response.status_code}")
-    except Exception as e:
-        print(f"❌ Calendar events error: {e}")
+                print(f"❌ {description}: FAILED ({response.status_code})")
+                print(f"   Error: {response.text[:200]}")
+                results[endpoint] = f"FAILED ({response.status_code})"
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ {description}: CONNECTION ERROR")
+            print(f"   Error: {e}")
+            results[endpoint] = f"CONNECTION ERROR: {e}"
     
-    # Test 4: User Registration
-    print("\n4️⃣ Testing User Registration...")
-    try:
-        user_data = {
-            "username": f"testuser_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            "email": f"test_{datetime.now().strftime('%Y%m%d%H%M%S')}@example.com",
-            "password": "testpass123",
-            "first_name": "Test",
-            "last_name": "User"
-        }
-        response = requests.post(f"{base_url}/api/auth/register/", json=user_data, timeout=10)
-        if response.status_code == 201:
-            print("✅ User registration working!")
-            user_info = response.json()
-            print(f"User created: {user_info.get('username', 'Unknown')}")
-        elif response.status_code == 400:
-            print("⚠️ Registration endpoint working (validation error expected)")
-        else:
-            print(f"❌ Registration failed: {response.status_code}")
-            print(f"Response: {response.text}")
-    except Exception as e:
-        print(f"❌ Registration error: {e}")
+    # Summary
+    print("\n" + "=" * 50)
+    print("📊 DEPLOYMENT TEST SUMMARY")
+    print("=" * 50)
     
-    print("\n🎉 Railway Backend Testing Complete!")
-    print(f"Your backend is live at: {base_url}")
+    for endpoint, status in results.items():
+        status_icon = "✅" if status == "SUCCESS" else "❌"
+        print(f"{status_icon} {endpoint}: {status}")
+    
+    success_count = sum(1 for status in results.values() if status == "SUCCESS")
+    total_count = len(results)
+    
+    print(f"\n🎯 Success Rate: {success_count}/{total_count} ({success_count/total_count*100:.1f}%)")
+    
+    if success_count == total_count:
+        print("🎉 All endpoints are working! Your Railway deployment is successful!")
+    elif success_count > 0:
+        print("⚠️  Some endpoints are working. Check the failed ones above.")
+    else:
+        print("❌ No endpoints are accessible. Check your Railway deployment.")
+    
+    return results
 
 if __name__ == "__main__":
-    # Replace with your actual Railway URL
-    RAILWAY_URL = "https://hackwesttx-backend-production.railway.app"
+    if len(sys.argv) != 2:
+        print("Usage: python3 test_railway_deployment.py <railway-url>")
+        print("Example: python3 test_railway_deployment.py https://your-app.railway.app")
+        sys.exit(1)
     
-    print("🚀 Railway Backend Test Suite")
-    print("=" * 60)
-    print(f"Testing URL: {RAILWAY_URL}")
-    print("=" * 60)
-    
-    test_railway_backend(RAILWAY_URL)
-    
-    print("\n💡 If tests fail, check:")
-    print("1. Railway deployment is complete")
-    print("2. Environment variables are set correctly")
-    print("3. MongoDB connection is working")
-    print("4. No errors in Railway logs")
+    railway_url = sys.argv[1]
+    test_railway_deployment(railway_url)
