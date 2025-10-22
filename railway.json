@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate --run-syncdb && python manage.py runserver 0.0.0.0:$PORT",
+    "startCommand": "python run_server.py",
     "healthcheckPath": "/api/health/"
   }
 }
