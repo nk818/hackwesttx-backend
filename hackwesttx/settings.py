@@ -71,17 +71,39 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 
 # Database configuration
-# Use SQLite with proper file path for Railway
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/tmp/db.sqlite3' if is_railway else BASE_DIR / 'db.sqlite3',
-    }
-}
+# Use PostgreSQL on Render, SQLite locally
+is_render = os.environ.get('RENDER') == 'true'
 
-if is_railway:
+if is_render:
+    # Render deployment - use PostgreSQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'railway'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+    print("🚀 Render deployment - using PostgreSQL database")
+elif is_railway:
+    # Railway deployment - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/tmp/db.sqlite3',
+        }
+    }
     print("🚀 Railway deployment - using SQLite database at /tmp/db.sqlite3")
 else:
+    # Local development - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
     print("🏠 Local development - using SQLite database")
 
 AUTH_PASSWORD_VALIDATORS = [
