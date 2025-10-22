@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: ./start_render_complete.sh
+    startCommand: ./start_render_robust.sh
     envVars:
       - key: DEBUG
         value: False
