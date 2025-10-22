@@ -4,14 +4,16 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python start_render.py
+    startCommand: ./start_render.sh
     envVars:
       - key: DEBUG
         value: False
       - key: SECRET_KEY
         value: django-insecure-change-this-in-production-$(date +%s)
       - key: MONGODB_ENABLED
-        value: False
+        value: True
+      - key: MONGODB_URI
+        value: mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       - key: RENDER
         value: true
       - key: ALLOWED_HOSTS
