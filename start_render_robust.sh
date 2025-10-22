@@ -35,6 +35,14 @@ python manage.py migrate --run-syncdb --verbosity=2 || {
     python manage.py migrate --run-syncdb --verbosity=2
 }
 
+# Fix custom user model specifically
+echo "🔧 Fixing custom user model..."
+python fix_user_model.py || {
+    echo "❌ User model fix failed, trying manual approach..."
+    python manage.py migrate api --fake-initial
+    python manage.py migrate api
+}
+
 # Check if migrations were successful
 check_migrations || {
     echo "❌ Migrations still failed, trying manual table creation..."
