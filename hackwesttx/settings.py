@@ -70,12 +70,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+# Use PostgreSQL on Railway, SQLite locally
+if is_railway:
+    # Railway deployment - use PostgreSQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'railway'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': os.environ.get('PGHOST', 'localhost'),
+            'PORT': os.environ.get('PGPORT', '5432'),
+        }
     }
-}
+    print("🚀 Railway deployment - using PostgreSQL database")
+else:
+    # Local development - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("🏠 Local development - using SQLite database")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
