@@ -76,17 +76,26 @@ is_render = os.environ.get('RENDER') == 'true'
 
 if is_render:
     # Render deployment - use PostgreSQL
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'railway'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+    # Try to use DATABASE_URL first, then fall back to individual variables
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.parse(database_url)
         }
-    }
-    print("🚀 Render deployment - using PostgreSQL database")
+        print("🚀 Render deployment - using DATABASE_URL")
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME', 'railway'),
+                'USER': os.environ.get('DB_USER', 'postgres'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+            }
+        }
+        print("🚀 Render deployment - using individual database variables")
 elif is_railway:
     # Railway deployment - use SQLite
     DATABASES = {
