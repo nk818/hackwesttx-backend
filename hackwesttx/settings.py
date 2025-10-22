@@ -72,26 +72,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 
 # Database configuration
-# Use MongoDB Atlas on Render, SQLite locally
+# Use SQLite as primary, MongoDB Atlas as secondary
 is_render = os.environ.get('RENDER') == 'true'
 
 if is_render:
-    # Render deployment - use MongoDB Atlas as primary database
+    # Render deployment - use SQLite as primary, MongoDB as secondary
     DATABASES = {
         'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'hackwesttx',
-            'CLIENT': {
-                'host': os.environ.get('MONGODB_URI', 'mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'),
-                'port': 27017,
-                'username': os.environ.get('MONGODB_USER', 'noahkueng1_db_user'),
-                'password': os.environ.get('MONGODB_PASSWORD', 'tc2FviW6Wa5kxjEO'),
-                'authSource': 'admin',
-                'authMechanism': 'SCRAM-SHA-1'
-            }
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
-    print("🚀 Render deployment - using MongoDB Atlas as primary database")
+    print("🚀 Render deployment - using SQLite database with MongoDB Atlas integration")
 elif is_railway:
     # Railway deployment - use SQLite
     DATABASES = {
