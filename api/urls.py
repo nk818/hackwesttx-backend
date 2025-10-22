@@ -1,7 +1,42 @@
 from django.urls import path
 from . import views
+from django.http import JsonResponse
+
+def api_root(request):
+    """API root endpoint"""
+    return JsonResponse({
+        'message': 'HackWestTX Class Portfolio API',
+        'version': '2.0.0',
+        'endpoints': {
+            'auth': {
+                'register': '/api/auth/register/',
+                'login': '/api/auth/login/',
+                'me': '/api/auth/me/'
+            },
+            'departments': '/api/departments/',
+            'professors': '/api/professors/',
+            'portfolios': '/api/portfolios/',
+            'materials': '/api/materials/',
+            'flashcards': '/api/flashcards/',
+            'quizzes': '/api/quizzes/',
+            'important-dates': '/api/important-dates/',
+            'reviews': '/api/reviews/',
+            'study-groups': '/api/study-groups/',
+            'notifications': '/api/notifications/',
+            'posts': '/api/posts/',
+            'users': '/api/users/',
+            'courses': '/api/courses/',
+            'search': '/api/search/',
+            'visitor': {
+                'landing': '/api/visitor/landing/',
+                'search': '/api/visitor/search/'
+            }
+        }
+    })
 
 urlpatterns = [
+    # API Root
+    path('', api_root, name='api-root'),
     # Search & Discovery
     path('search/', views.global_search, name='global-search'),
     path('search/autocomplete/', views.search_autocomplete, name='search-autocomplete'),
@@ -137,8 +172,12 @@ urlpatterns = [
     path('recommendations/<int:pk>/', views.ResourceRecommendationDetailView.as_view(), name='recommendation-detail'),
     
     # Users (existing)
+    path('users/', views.list_users, name='user-list'),
     path('users/profile/<int:pk>/', views.UserProfileView.as_view(), name='user-profile'),
     path('users/search/', views.UserSearchView.as_view(), name='user-search'),
+    
+    # Courses (placeholder - add actual course endpoints if needed)
+    path('courses/', views.DepartmentListCreateView.as_view(), name='course-list'),  # Using departments as courses for now
     
     # Posts (existing)
     path('posts/', views.PostListCreateView.as_view(), name='post-list'),
