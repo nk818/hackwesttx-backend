@@ -1,1 +1,2 @@
-web: python run_server.py
+web: ./start_render.sh
+
