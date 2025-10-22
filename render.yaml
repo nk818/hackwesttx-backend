@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: ./start_render_robust.sh
+    startCommand: ./start_mongodb.sh
     envVars:
       - key: DEBUG
         value: False
@@ -14,6 +14,10 @@ services:
         value: True
       - key: MONGODB_URI
         value: mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: MONGODB_USER
+        value: noahkueng1_db_user
+      - key: MONGODB_PASSWORD
+        value: tc2FviW6Wa5kxjEO
       - key: RENDER
         value: true
       - key: ALLOWED_HOSTS
