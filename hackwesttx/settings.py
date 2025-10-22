@@ -75,27 +75,14 @@ WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 is_render = os.environ.get('RENDER') == 'true'
 
 if is_render:
-    # Render deployment - use PostgreSQL
-    # Try to use DATABASE_URL first, then fall back to individual variables
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.parse(database_url)
+    # Render deployment - use SQLite as primary, MongoDB as secondary
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/tmp/db.sqlite3',
         }
-        print("🚀 Render deployment - using DATABASE_URL")
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('DB_NAME', 'railway'),
-                'USER': os.environ.get('DB_USER', 'postgres'),
-                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-                'HOST': os.environ.get('DB_HOST', 'localhost'),
-                'PORT': os.environ.get('DB_PORT', '5432'),
-            }
-        }
-        print("🚀 Render deployment - using individual database variables")
+    }
+    print("🚀 Render deployment - using SQLite database with MongoDB integration")
 elif is_railway:
     # Railway deployment - use SQLite
     DATABASES = {
@@ -168,5 +155,5 @@ OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 MONGODB_URI = config('MONGODB_URI', default='mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 
 # MongoDB Connection Settings
-MONGODB_ENABLED = config('MONGODB_ENABLED', default=False, cast=bool)
+MONGODB_ENABLED = config('MONGODB_ENABLED', default=True if is_render else False, cast=bool)
 MONGODB_TIMEOUT = 5  # 5 second timeout for MongoDB connections

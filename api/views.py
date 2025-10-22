@@ -3346,8 +3346,8 @@ def comment_post(request, post_id):
 def health_check(request):
     from .mongodb_utils import test_mongodb_connection
     from django.db import connection
-    from django.core.management import execute_from_command_line
     import os
+    import time
     
     # Test MongoDB connection
     mongodb_status = test_mongodb_connection()
@@ -3368,10 +3368,36 @@ def health_check(request):
     db_exists = os.path.exists(db_path)
     db_size = os.path.getsize(db_path) if db_exists else 0
     
+    # Get deployment info
+    deployment_info = {
+        'platform': 'unknown',
+        'port': os.environ.get('PORT', 'NOT SET'),
+        'environment': 'unknown'
+    }
+    
+    if os.environ.get('RENDER') == 'true':
+        deployment_info['platform'] = 'Render'
+        deployment_info['environment'] = 'production'
+    elif os.environ.get('RAILWAY_ENVIRONMENT'):
+        deployment_info['platform'] = 'Railway'
+        deployment_info['environment'] = os.environ.get('RAILWAY_ENVIRONMENT', 'unknown')
+    else:
+        deployment_info['platform'] = 'Local'
+        deployment_info['environment'] = 'development'
+    
+    # Overall health status
+    overall_status = "OK"
+    if sqlite_status == "error" or mongodb_status.get('status') == 'failed':
+        overall_status = "DEGRADED"
+    if sqlite_status == "error" and mongodb_status.get('status') == 'failed':
+        overall_status = "ERROR"
+    
     return Response({
-        'status': 'OK',
+        'status': overall_status,
         'message': 'HackWestTX Class Portfolio API is running!',
         'version': '2.0.0',
+        'timestamp': time.time(),
+        'deployment': deployment_info,
         'database': {
             'sqlite': {
                 'status': sqlite_status,
@@ -3382,10 +3408,15 @@ def health_check(request):
             },
             'mongodb': mongodb_status
         },
-        'railway_debug': {
-            'port': os.environ.get('PORT', 'NOT SET'),
-            'railway_env': os.environ.get('RAILWAY_ENVIRONMENT', 'NOT SET'),
-            'railway_project': os.environ.get('RAILWAY_PROJECT_ID', 'NOT SET')
+        'endpoints': {
+            'health': '/api/health/',
+            'api_root': '/',
+            'admin': '/admin/',
+            'auth': {
+                'register': '/api/auth/register/',
+                'login': '/api/auth/login/',
+                'me': '/api/auth/me/'
+            }
         }
     })
 
