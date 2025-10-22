@@ -1,64 +1,69 @@
 """
-MongoDB utilities for Django integration
+MongoDB utilities for additional data storage
 """
+import os
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from django.conf import settings
-import ssl
-import time
 
 def get_mongodb_client():
-    """Get MongoDB client connection with timeout and error handling"""
-    # Check if MongoDB is enabled
-    if not getattr(settings, 'MONGODB_ENABLED', False):
-        return None
-        
+    """Get MongoDB client connection"""
     try:
-        uri = settings.MONGODB_URI
+        uri = getattr(settings, 'MONGODB_URI', None)
+        if not uri:
+            return None
+        
         client = MongoClient(
             uri, 
-            server_api=ServerApi('1'), 
-            tlsAllowInvalidCertificates=True,
-            serverSelectionTimeoutMS=5000,  # 5 second timeout
-            connectTimeoutMS=5000,
-            socketTimeoutMS=5000
+            server_api=ServerApi('1'),
+            tlsAllowInvalidCertificates=True
         )
-        # Test the connection with timeout
-        client.admin.command('ping')
         return client
     except Exception as e:
         print(f"MongoDB connection error: {e}")
         return None
 
 def get_mongodb_database():
-    """Get MongoDB database instance"""
+    """Get MongoDB database"""
     client = get_mongodb_client()
-    if client:
-        return client['hackwesttx_db']
-    return None
+    if not client:
+        return None
+    
+    db_name = getattr(settings, 'MONGODB_DATABASE', 'hackwesttx_db')
+    return client[db_name]
 
-def test_mongodb_connection():
-    """Test MongoDB connection and return status"""
-    # Check if MongoDB is enabled
+def store_additional_data(collection_name, data):
+    """Store additional data in MongoDB"""
     if not getattr(settings, 'MONGODB_ENABLED', False):
-        return {'status': 'disabled', 'message': 'MongoDB is disabled in settings'}
-        
+        return None
+    
     try:
-        client = get_mongodb_client()
-        if client:
-            # Test basic operations
-            db = client['hackwesttx_db']
-            collections = db.list_collection_names()
-            return {
-                'status': 'connected',
-                'database': 'hackwesttx_db',
-                'collections': collections
-            }
-        else:
-            return {'status': 'failed', 'error': 'Could not create client - SSL or network issue'}
+        db = get_mongodb_database()
+        if not db:
+            return None
+        
+        collection = db[collection_name]
+        result = collection.insert_one(data)
+        return result.inserted_id
     except Exception as e:
-        return {'status': 'failed', 'error': str(e)[:100]}
+        print(f"Error storing data in MongoDB: {e}")
+        return None
 
-def is_mongodb_available():
-    """Check if MongoDB is available and working"""
-    return test_mongodb_connection().get('status') == 'connected'
+def get_additional_data(collection_name, query=None):
+    """Retrieve additional data from MongoDB"""
+    if not getattr(settings, 'MONGODB_ENABLED', False):
+        return []
+    
+    try:
+        db = get_mongodb_database()
+        if not db:
+            return []
+        
+        collection = db[collection_name]
+        if query:
+            return list(collection.find(query))
+        else:
+            return list(collection.find())
+    except Exception as e:
+        print(f"Error retrieving data from MongoDB: {e}")
+        return []
