@@ -1,36 +1,13 @@
 from django.contrib import admin
 from .models import (
-    User, PasswordResetToken, Department, Professor, ClassPortfolio, 
+    PasswordResetToken, Department, Professor, ClassPortfolio, 
     MarketplaceListing, PortfolioPurchase, Syllabus, SyllabusExtraction,
     ImportantDate, LectureMaterial, Flashcard, Quiz, QuizQuestion, QuizSubmission,
     ClassReview, StudyGroup, Notification, ResourceRecommendation,
     Post, Like, Comment, ProcessedFile, Document, DocumentQuiz, YouTubeVideo, CalendarEvent
 )
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'is_verified', 'university', 'major']
-    list_filter = ['role', 'is_verified', 'university', 'graduation_year', 'major', 'profile_visibility']
-    search_fields = ['username', 'email', 'first_name', 'last_name']
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('username', 'email', 'first_name', 'last_name', 'phone')
-        }),
-        ('Academic Information', {
-            'fields': ('university', 'graduation_year', 'major')
-        }),
-        ('Account Settings', {
-            'fields': ('role', 'is_verified', 'profile_visibility', 'is_active', 'is_staff', 'is_superuser')
-        }),
-        ('Permissions', {
-            'fields': ('groups', 'user_permissions'),
-            'classes': ('collapse',)
-        }),
-        ('Important Dates', {
-            'fields': ('date_joined', 'last_login'),
-            'classes': ('collapse',)
-        }),
-    )
+# UserAdmin removed - using Django's default User admin
 
 @admin.register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin):

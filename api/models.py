@@ -5,51 +5,52 @@ from django.core.validators import MinValueValidator, MaxValueValidator, URLVali
 from django.core.exceptions import ValidationError
 import re
 
-class User(AbstractUser):
-    # User roles
-    ROLE_CHOICES = [
-        ('student', 'Student'),
-        ('moderator', 'Moderator'),
-        ('admin', 'Admin'),
-    ]
-    
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, blank=True)
-    university = models.CharField(max_length=200, blank=True)
-    graduation_year = models.IntegerField(null=True, blank=True)
-    major = models.CharField(max_length=100, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
-    is_verified = models.BooleanField(default=False)
-    profile_visibility = models.CharField(
-        max_length=20, 
-        choices=[('public', 'Public'), ('private', 'Private')], 
-        default='public'
-    )
-    
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
-
-    def save(self, *args, **kwargs):
-        self.email = self.email.lower()
-        super().save(*args, **kwargs)
-    
-    def is_student(self):
-        return self.role == 'student'
-    
-    def is_moderator(self):
-        return self.role == 'moderator'
-    
-    def is_admin(self):
-        return self.role == 'admin'
-    
-    def can_moderate_content(self):
-        return self.role in ['moderator', 'admin']
-    
-    def can_access_admin_panel(self):
-        return self.role == 'admin'
+# Custom User model commented out - using Django's default User
+# class User(AbstractUser):
+#     # User roles
+#     ROLE_CHOICES = [
+#         ('student', 'Student'),
+#         ('moderator', 'Moderator'),
+#         ('admin', 'Admin'),
+#     ]
+#     
+#     email = models.EmailField(unique=True)
+#     phone = models.CharField(max_length=20, blank=True)
+#     university = models.CharField(max_length=200, blank=True)
+#     graduation_year = models.IntegerField(null=True, blank=True)
+#     major = models.CharField(max_length=100, blank=True)
+#     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+#     is_verified = models.BooleanField(default=False)
+#     profile_visibility = models.CharField(
+#         max_length=20, 
+#         choices=[('public', 'Public'), ('private', 'Private')], 
+#         default='public'
+#     )
+#     
+#     USERNAME_FIELD = 'username'
+#     REQUIRED_FIELDS = ['email']
+#
+#     def save(self, *args, **kwargs):
+#         self.email = self.email.lower()
+#         super().save(*args, **kwargs)
+#     
+#     def is_student(self):
+#         return self.role == 'student'
+#     
+#     def is_moderator(self):
+#         return self.role == 'moderator'
+#     
+#     def is_admin(self):
+#         return self.role == 'admin'
+#     
+#     def can_moderate_content(self):
+#         return self.role in ['moderator', 'admin']
+#     
+#     def can_access_admin_panel(self):
+#         return self.role == 'admin'
 
 class PasswordResetToken(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='password_reset_tokens')
     token = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -85,7 +86,7 @@ class ClassPortfolio(models.Model):
     semester = models.CharField(max_length=20)  # e.g., "Fall 2024"
     year = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Price in USD")
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_portfolios')
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='created_portfolios')
     created_at = models.DateTimeField(auto_now_add=True)
     is_public = models.BooleanField(default=False)
     color = models.CharField(
@@ -139,7 +140,7 @@ class MarketplaceListing(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     # Purchase tracking
-    buyers = models.ManyToManyField(User, through='PortfolioPurchase', related_name='purchased_portfolios')
+    buyers = models.ManyToManyField('auth.User', through='PortfolioPurchase', related_name='purchased_portfolios')
     
     # Promotional features
     promo_code = models.CharField(max_length=50, blank=True, null=True)
@@ -165,7 +166,7 @@ class MarketplaceListing(models.Model):
 class PortfolioPurchase(models.Model):
     """Track portfolio purchases"""
     listing = models.ForeignKey(MarketplaceListing, on_delete=models.CASCADE)
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE)
+    buyer = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     promo_code_used = models.CharField(max_length=50, blank=True, null=True)
     purchased_at = models.DateTimeField(auto_now_add=True)
@@ -312,7 +313,7 @@ class LectureMaterial(models.Model):
     title = models.CharField(max_length=200)
     material_type = models.CharField(max_length=20, choices=MATERIAL_TYPE_CHOICES)
     file = models.FileField(upload_to='materials/')
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     topic = models.CharField(max_length=100, blank=True)
     
@@ -340,7 +341,7 @@ class Quiz(models.Model):
     title = models.CharField(max_length=200)
     quiz_type = models.CharField(max_length=20, choices=QUIZ_TYPE_CHOICES, default='mixed')
     topic = models.CharField(max_length=100, blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=False)
     time_limit_minutes = models.IntegerField(null=True, blank=True, help_text="Time limit in minutes (optional)")
@@ -396,7 +397,7 @@ class QuizQuestion(models.Model):
 class QuizSubmission(models.Model):
     """Track user quiz submissions and answers"""
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='submissions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_submissions')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='quiz_submissions')
     submitted_at = models.DateTimeField(auto_now_add=True)
     time_taken_minutes = models.IntegerField(null=True, blank=True)
     score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -434,7 +435,7 @@ class QuizSubmission(models.Model):
 
 class ClassReview(models.Model):
     portfolio = models.ForeignKey(ClassPortfolio, on_delete=models.CASCADE, related_name='reviews')
-    reviewer = models.ForeignKey(User, on_delete=models.CASCADE)
+    reviewer = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     final_grade = models.CharField(max_length=2, blank=True)  # A, B+, etc.
     difficulty_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     teaching_quality_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
@@ -450,8 +451,8 @@ class StudyGroup(models.Model):
     portfolio = models.ForeignKey(ClassPortfolio, on_delete=models.CASCADE, related_name='study_groups')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_study_groups')
-    members = models.ManyToManyField(User, related_name='study_groups')
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='created_study_groups')
+    members = models.ManyToManyField('auth.User', related_name='study_groups')
     max_members = models.IntegerField(default=10)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -468,7 +469,7 @@ class Notification(models.Model):
         ('general', 'General'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=200)
     message = models.TextField()
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES)
@@ -489,7 +490,7 @@ class ResourceRecommendation(models.Model):
     resource_type = models.CharField(max_length=50)  # youtube, textbook, website, etc.
     description = models.TextField(blank=True)
     topic = models.CharField(max_length=100, blank=True)
-    recommended_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    recommended_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -499,7 +500,7 @@ class ResourceRecommendation(models.Model):
 class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    author = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='posts')
     tags = models.CharField(max_length=500, blank=True, help_text='Comma-separated tags')
     image_url = models.URLField(blank=True, null=True)
     is_published = models.BooleanField(default=True)
@@ -519,7 +520,7 @@ class Post(models.Model):
 
 class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -530,7 +531,7 @@ class Like(models.Model):
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     content = models.TextField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -586,7 +587,7 @@ class ProcessedFile(models.Model):
     char_count = models.IntegerField(default=0)
     
     # Relationships
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='processed_files')
+    uploaded_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='processed_files')
     portfolio = models.ForeignKey(ClassPortfolio, on_delete=models.CASCADE, related_name='processed_files', null=True, blank=True)
     
     # Timestamps
@@ -637,7 +638,7 @@ class Document(models.Model):
     
     # User and portfolio association
     uploaded_by = models.ForeignKey(
-        User, 
+        'auth.User', 
         on_delete=models.CASCADE, 
         related_name='uploaded_documents',
         help_text="User who uploaded the document"
@@ -685,7 +686,7 @@ class Document(models.Model):
 
 class DocumentQuiz(models.Model):
     """Model to store quiz data generated from documents"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='document_quizzes')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='document_quizzes')
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='document_quizzes', null=True, blank=True)
     filename = models.CharField(max_length=255, help_text="Original filename of the document")
     topic = models.CharField(max_length=255, help_text="Quiz topic/subject")
@@ -757,7 +758,7 @@ class YouTubeVideo(models.Model):
     Note: Despite the name, this model now accepts any safe educational URL, not just YouTube.
     The name is kept for backward compatibility with existing database and API endpoints.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='youtube_videos')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='youtube_videos')
     url = models.URLField(
         max_length=500, 
         validators=[validate_safe_url],
@@ -874,7 +875,7 @@ class CalendarEvent(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calendar_events')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='calendar_events')
     class_portfolio = models.ForeignKey(
         'ClassPortfolio', 
         on_delete=models.CASCADE, 

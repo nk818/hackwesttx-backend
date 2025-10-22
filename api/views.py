@@ -2,14 +2,18 @@ from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q, Count, Avg, Min, Max, F
 from django.utils import timezone
 from django.conf import settings
 from datetime import datetime, timedelta
 import os
+
+# Get Django's default User model
+User = get_user_model()
+
 from .models import (
-    User, PasswordResetToken, Department, Professor, ClassPortfolio, 
+    PasswordResetToken, Department, Professor, ClassPortfolio, 
     MarketplaceListing, PortfolioPurchase, Syllabus, SyllabusExtraction,
     ImportantDate, LectureMaterial, Flashcard, Quiz, QuizQuestion, QuizSubmission,
     ClassReview, StudyGroup, Notification, ResourceRecommendation,
