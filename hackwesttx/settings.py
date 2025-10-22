@@ -128,3 +128,7 @@ OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
 # MongoDB Configuration
 MONGODB_URI = config('MONGODB_URI', default='mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+
+# MongoDB Connection Settings
+MONGODB_ENABLED = config('MONGODB_ENABLED', default=False, cast=bool)
+MONGODB_TIMEOUT = 5  # 5 second timeout for MongoDB connections

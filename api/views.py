@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.db.models import Q, Count, Avg, Min, Max, F
 from django.utils import timezone
+from django.conf import settings
 from datetime import datetime, timedelta
 import os
 from .models import (
@@ -3344,16 +3345,41 @@ def comment_post(request, post_id):
 @permission_classes([permissions.AllowAny])
 def health_check(request):
     from .mongodb_utils import test_mongodb_connection
+    from django.db import connection
+    from django.core.management import execute_from_command_line
+    import os
     
     # Test MongoDB connection
     mongodb_status = test_mongodb_connection()
+    
+    # Test SQLite database
+    sqlite_status = "unknown"
+    tables = []
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = [table[0] for table in cursor.fetchall()]
+            sqlite_status = "connected" if tables else "no_tables"
+    except Exception as e:
+        sqlite_status = f"error: {str(e)[:100]}"
+    
+    # Check if database file exists
+    db_path = settings.DATABASES['default']['NAME']
+    db_exists = os.path.exists(db_path)
+    db_size = os.path.getsize(db_path) if db_exists else 0
     
     return Response({
         'status': 'OK',
         'message': 'HackWestTX Class Portfolio API is running!',
         'version': '2.0.0',
         'database': {
-            'sqlite': 'connected',
+            'sqlite': {
+                'status': sqlite_status,
+                'tables': tables,
+                'file_exists': db_exists,
+                'file_size': db_size,
+                'file_path': db_path
+            },
             'mongodb': mongodb_status
         },
         'railway_debug': {
