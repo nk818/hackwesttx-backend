@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting HackWestTX Backend (Simple Server)..."
+echo "🚀 Starting HackWestTX Backend (Simple Server with Auto-Migrations)..."
 
 # Set environment variables
 export DJANGO_SETTINGS_MODULE=hackwesttx.settings
@@ -8,8 +8,13 @@ export DJANGO_SETTINGS_MODULE=hackwesttx.settings
 # Create staticfiles directory if it doesn't exist
 mkdir -p staticfiles
 
-# Ensure database file exists
+# Ensure database file exists and is writable
 touch db.sqlite3
+chmod 664 db.sqlite3
+
+# Run auto-migration script
+echo "🔧 Running auto-migration script..."
+python3 auto_migrate.py
 
 # Collect static files
 echo "📁 Collecting static files..."
