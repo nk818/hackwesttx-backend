@@ -8,6 +8,9 @@ export DJANGO_SETTINGS_MODULE=hackwesttx.settings
 # Create staticfiles directory if it doesn't exist
 mkdir -p staticfiles
 
+# Ensure database directory exists
+touch db.sqlite3
+
 # Function to check if migrations ran successfully
 check_migrations() {
     echo "🔍 Checking if migrations were successful..."
@@ -26,21 +29,13 @@ with connection.cursor() as cursor:
 "
 }
 
-# Run database migrations with error handling
-echo "📊 Running database migrations..."
-python manage.py makemigrations --verbosity=2 || echo "⚠️ makemigrations failed, continuing..."
-python manage.py migrate --run-syncdb --verbosity=2 || {
-    echo "❌ Migrations failed, trying alternative approach..."
-    python manage.py migrate --verbosity=2
+# Initialize database properly
+echo "🔧 Initializing database..."
+python init_database.py || {
+    echo "❌ Database initialization failed, trying alternative approach..."
+    python manage.py makemigrations --verbosity=2
     python manage.py migrate --run-syncdb --verbosity=2
-}
-
-# Fix custom user model specifically
-echo "🔧 Fixing custom user model..."
-python fix_user_model.py || {
-    echo "❌ User model fix failed, trying manual approach..."
-    python manage.py migrate api --fake-initial
-    python manage.py migrate api
+    python fix_user_model.py
 }
 
 # Check if migrations were successful

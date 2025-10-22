@@ -80,7 +80,7 @@ if is_render:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/tmp/db.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
     print("🚀 Render deployment - using SQLite database with MongoDB integration")
