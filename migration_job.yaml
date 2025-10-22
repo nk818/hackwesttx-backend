@@ -1,0 +1,14 @@
+services:
+  - type: job
+    name: run-migrations
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 run_migrations_cli.py
+    envVars:
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        value: django-insecure-change-this-in-production-$(date +%s)
+      - key: RENDER
+        value: "true"
