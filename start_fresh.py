@@ -32,28 +32,46 @@ def start_fresh():
         print("📊 Creating fresh initial migration...")
         call_command('makemigrations', 'api', verbosity=2)
         
-        # Apply migrations
+        # Apply migrations for all apps
         print("📊 Applying fresh migrations...")
-        call_command('migrate', 'api', '--run-syncdb', verbosity=2)
+        call_command('migrate', '--run-syncdb', verbosity=2)
         
-        # Verify table exists
+        # Force apply api migrations specifically
+        print("📊 Force applying api migrations...")
+        call_command('migrate', 'api', verbosity=2)
+        
+        # Verify tables exist
+        print("🔍 Verifying database tables...")
         with connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            print(f"📊 Found {len(tables)} tables in database")
+            
+            # Check for api_user table
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='api_user';")
             if not cursor.fetchone():
                 print("❌ api_user table does not exist, trying to create it...")
                 call_command('migrate', 'api', '--fake-initial', verbosity=2)
+            else:
+                print("✅ api_user table exists")
         
-        # Create superuser
+        # Create superuser using environment variables
         from api.models import User
         try:
             if not User.objects.filter(is_superuser=True).exists():
                 print("👤 Creating superuser...")
+                
+                # Use environment variables if available
+                username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+                email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@hackwesttx.com')
+                password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+                
                 User.objects.create_superuser(
-                    username='admin',
-                    email='admin@hackwesttx.com',
-                    password='admin123'
+                    username=username,
+                    email=email,
+                    password=password
                 )
-                print("✅ Superuser created: admin/admin123")
+                print(f"✅ Superuser created: {username}/{password}")
             else:
                 print("✅ Superuser already exists")
         except Exception as e:
