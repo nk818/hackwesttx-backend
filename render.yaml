@@ -3,8 +3,8 @@ services:
     name: hackwesttx-backend
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: ./start_with_migrations.sh
+    buildCommand: ./build.sh
+    startCommand: gunicorn hackwesttx.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DEBUG
         value: False
@@ -22,4 +22,12 @@ services:
         value: true
       - key: ALLOWED_HOSTS
         value: hackwesttx-backend.onrender.com
+      - key: CREATE_SUPERUSER
+        value: "True"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: "admin"
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: "admin@hackwesttx.com"
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: "admin123"
     healthCheckPath: /api/health/ 
