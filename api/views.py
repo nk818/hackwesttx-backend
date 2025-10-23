@@ -4199,3 +4199,129 @@ def unlink_resource_from_event(request, event_id, resource_id):
             'success': False,
             'error': 'Calendar event not found'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def verify_all_connections(request):
+    """Comprehensive connection verification for Render + MongoDB Atlas"""
+    try:
+        import pymongo
+        from datetime import datetime
+        
+        # 1. Render Environment Check
+        render_info = {
+            'is_render': os.environ.get('RENDER') == 'true',
+            'port': os.environ.get('PORT'),
+            'deployment_url': 'https://hackwesttx-backend.onrender.com'
+        }
+        
+        # 2. SQLite Database Check
+        sqlite_info = {
+            'engine': settings.DATABASES['default']['ENGINE'],
+            'name': settings.DATABASES['default']['NAME'],
+            'connected': False,
+            'tables': 0,
+            'api_user_exists': False
+        }
+        
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = cursor.fetchall()
+                sqlite_info['connected'] = True
+                sqlite_info['tables'] = len(tables)
+                
+                # Check for api_user table
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='api_user';")
+                if cursor.fetchone():
+                    sqlite_info['api_user_exists'] = True
+        except Exception as e:
+            sqlite_info['error'] = str(e)
+        
+        # 3. MongoDB Atlas Check
+        mongodb_info = {
+            'enabled': os.environ.get('MONGODB_ENABLED', 'False').lower() == 'true',
+            'uri_set': bool(os.environ.get('MONGODB_URI')),
+            'connected': False,
+            'collections': 0,
+            'write_test': False,
+            'read_test': False
+        }
+        
+        if mongodb_info['enabled'] and mongodb_info['uri_set']:
+            try:
+                mongodb_uri = os.environ.get('MONGODB_URI')
+                client = pymongo.MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)
+                client.admin.command('ping')
+                mongodb_info['connected'] = True
+                
+                db = client['hackwesttx_db']
+                collections = db.list_collection_names()
+                mongodb_info['collections'] = len(collections)
+                
+                # Test write operation
+                test_collection = db['connection_test']
+                test_doc = {
+                    'test': True,
+                    'timestamp': datetime.now(),
+                    'source': 'api_verification',
+                    'render_deployment': True
+                }
+                result = test_collection.insert_one(test_doc)
+                mongodb_info['write_test'] = True
+                mongodb_info['test_doc_id'] = str(result.inserted_id)
+                
+                # Test read operation
+                retrieved_doc = test_collection.find_one({'_id': result.inserted_id})
+                if retrieved_doc:
+                    mongodb_info['read_test'] = True
+                
+                # Clean up
+                test_collection.delete_one({'_id': result.inserted_id})
+                
+            except Exception as e:
+                mongodb_info['error'] = str(e)
+        
+        # 4. Request Flow Check
+        flow_info = {
+            'architecture': 'Flutter App → Render (Backend) → MongoDB Atlas (DB)',
+            'render_to_atlas': mongodb_info['connected'],
+            'data_flow': 'Working' if mongodb_info['connected'] else 'Broken'
+        }
+        
+        # 5. Summary
+        all_connected = (
+            sqlite_info['connected'] and 
+            mongodb_info['connected'] and 
+            render_info['is_render']
+        )
+        
+        return Response({
+            'success': True,
+            'timestamp': datetime.now().isoformat(),
+            'architecture': {
+                'description': 'Flutter App → Render (Backend) → MongoDB Atlas (Database)',
+                'components': [
+                    'Flutter App (Client)',
+                    'Render (Backend Hosting)',
+                    'MongoDB Atlas (Database)'
+                ]
+            },
+            'render_deployment': render_info,
+            'sqlite_database': sqlite_info,
+            'mongodb_atlas': mongodb_info,
+            'request_flow': flow_info,
+            'overall_status': {
+                'all_connected': all_connected,
+                'data_saving': 'Working' if all_connected else 'Not Working',
+                'recommendation': 'All systems operational' if all_connected else 'Check failed connections'
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

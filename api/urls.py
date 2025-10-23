@@ -86,6 +86,9 @@ urlpatterns = [
     # Health Check
     path('health/', views.health_check, name='health'),
     
+    # Comprehensive Connection Verification
+    path('verify-connections/', views.verify_all_connections, name='verify-connections'),
+    
     # Departments
     path('departments/', views.DepartmentListCreateView.as_view(), name='department-list'),
     path('departments/<int:pk>/', views.DepartmentDetailView.as_view(), name='department-detail'),
