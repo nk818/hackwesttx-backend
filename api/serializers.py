@@ -1,15 +1,12 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from .models import (
-    PasswordResetToken, Department, Professor, ClassPortfolio, 
+    User, PasswordResetToken, Department, Professor, ClassPortfolio, 
     MarketplaceListing, PortfolioPurchase, Syllabus, SyllabusExtraction,
     ImportantDate, LectureMaterial, Flashcard, Quiz, QuizQuestion, QuizSubmission,
     ClassReview, StudyGroup, Notification, ResourceRecommendation,
     Post, Like, Comment, ProcessedFile, Document, DocumentQuiz, YouTubeVideo, CalendarEvent
 )
-
-# Get Django's default User model
-User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

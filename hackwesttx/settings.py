@@ -134,7 +134,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Use Django's default User model
-# AUTH_USER_MODEL = 'api.User'  # Commented out to use default User
+AUTH_USER_MODEL = 'api.User'
 
 # Django REST Framework
 REST_FRAMEWORK = {

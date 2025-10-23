@@ -1,13 +1,23 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
-    PasswordResetToken, Department, Professor, ClassPortfolio, 
+    User, PasswordResetToken, Department, Professor, ClassPortfolio, 
     MarketplaceListing, PortfolioPurchase, Syllabus, SyllabusExtraction,
     ImportantDate, LectureMaterial, Flashcard, Quiz, QuizQuestion, QuizSubmission,
     ClassReview, StudyGroup, Notification, ResourceRecommendation,
     Post, Like, Comment, ProcessedFile, Document, DocumentQuiz, YouTubeVideo, CalendarEvent
 )
 
-# UserAdmin removed - using Django's default User admin
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_verified', 'is_staff')
+    list_filter = ('role', 'is_verified', 'is_staff', 'is_superuser', 'is_active', 'date_joined')
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    ordering = ('username',)
+    
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('Additional Info', {'fields': ('phone', 'university', 'graduation_year', 'major', 'role', 'is_verified', 'profile_visibility')}),
+    )
 
 @admin.register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin):
