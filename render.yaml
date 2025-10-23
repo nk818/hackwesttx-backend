@@ -3,7 +3,7 @@ services:
     name: hackwesttx-backend
     env: python
     plan: free
-    buildCommand: ./build.sh
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python create_admin.py && python manage.py collectstatic --noinput
     startCommand: gunicorn hackwesttx.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DEBUG

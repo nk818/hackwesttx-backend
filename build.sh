@@ -19,8 +19,7 @@ python3 manage.py migrate --verbosity=2
 
 # Create superuser if environment variable is set
 if [[ $CREATE_SUPERUSER ]]; then
-    echo "👤 Creating superuser (triggered by CREATE_SUPERUSER env var)..."
-    # Set environment variables for Django createsuperuser
+    echo "👤 Creating superuser (triggered by CREATE_SUPERUSER env var)..."    # Set environment variables for Django createsuperuser
     export DJANGO_SUPERUSER_USERNAME=$DJANGO_SUPERUSER_USERNAME
     export DJANGO_SUPERUSER_EMAIL=$DJANGO_SUPERUSER_EMAIL
     export DJANGO_SUPERUSER_PASSWORD=$DJANGO_SUPERUSER_PASSWORD
