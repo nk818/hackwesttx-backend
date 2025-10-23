@@ -4325,3 +4325,63 @@ def verify_all_connections(request):
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def debug_auth(request):
+    """Debug authentication and token issues"""
+    try:
+        from rest_framework.authtoken.models import Token
+        from api.models import User
+        
+        # Get all users
+        users = User.objects.all()
+        users_data = []
+        for user in users:
+            token, created = Token.objects.get_or_create(user=user)
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_superuser': user.is_superuser,
+                'token': token.key,
+                'token_created': created
+            })
+        
+        # Get all tokens
+        tokens = Token.objects.all()
+        tokens_data = []
+        for token in tokens:
+            tokens_data.append({
+                'user': token.user.username,
+                'key': token.key,
+                'created': token.created
+            })
+        
+        # Check database connection
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            table_names = [table[0] for table in tables]
+        
+        return Response({
+            'success': True,
+            'timestamp': datetime.now().isoformat(),
+            'users': users_data,
+            'tokens': tokens_data,
+            'database_tables': table_names,
+            'auth_tables_exist': {
+                'auth_user': 'auth_user' in table_names,
+                'api_user': 'api_user' in table_names,
+                'authtoken_token': 'authtoken_token' in table_names
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

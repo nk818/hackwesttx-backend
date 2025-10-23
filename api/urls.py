@@ -89,6 +89,9 @@ urlpatterns = [
     # Comprehensive Connection Verification
     path('verify-connections/', views.verify_all_connections, name='verify-connections'),
     
+    # Debug Authentication
+    path('debug-auth/', views.debug_auth, name='debug-auth'),
+    
     # Departments
     path('departments/', views.DepartmentListCreateView.as_view(), name='department-list'),
     path('departments/<int:pk>/', views.DepartmentDetailView.as_view(), name='department-detail'),
