@@ -85,6 +85,7 @@ if is_render:
             'DATABASE_URL',
             default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
         )
+        # Use dj_database_url to parse connection string
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
@@ -93,26 +94,26 @@ if is_render:
             )
         }
         print("🐘 Using PostgreSQL on Render")
-    except ImportError:
-        # Fallback if dj-database-url not installed (shouldn't happen in production)
+    except Exception as e:
+        # Fallback configuration
         DATABASE_URL = config(
             'DATABASE_URL',
             default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
         )
-        # Parse connection string manually
+        # Manual fallback configuration
         from urllib.parse import urlparse
         db_url = urlparse(DATABASE_URL)
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
-                'NAME': db_url.path[1:],  # Remove leading /
-                'USER': db_url.username,
-                'PASSWORD': db_url.password,
-                'HOST': db_url.hostname,
+                'NAME': db_url.path[1:] if db_url.path.startswith('/') else db_url.path,
+                'USER': db_url.username or '',
+                'PASSWORD': db_url.password or '',
+                'HOST': db_url.hostname or '',
                 'PORT': db_url.port or 5432,
             }
         }
-        print("🐘 Using PostgreSQL on Render (fallback config)")
+        print(f"🐘 Using PostgreSQL on Render (fallback): {str(e)[:50]}")
 else:
     # Local development - use SQLite
     DATABASES = {
