@@ -72,40 +72,56 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 
 # Database configuration
-# Always use MongoDB Atlas for Django ORM (both local development and production)
-use_mongodb_only = config('USE_MONGODB_ONLY', default=True, cast=bool)
+# Use PostgreSQL on Render, SQLite locally, MongoDB optional for additional data
+is_render = os.environ.get('RENDER') == 'true'
 
-if use_mongodb_only:
-    # Use MongoDB Atlas as primary database for Django ORM
-    mongodb_uri = config('MONGODB_URI', default='mongodb+srv://adminN:nSkTkOFijiEWfdsoksd@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-    
-    # For mongodb+srv:// connections, SSL is automatically enabled
-    # djongo will handle the connection string directly
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': config('MONGODB_DATABASE', default='hackwesttx_db'),
-            'ENFORCE_SCHEMA': False,
-            'CLIENT': {
-                'host': mongodb_uri,
-                # SSL is automatically handled by mongodb+srv:// protocol
-                # Additional timeout settings
-                'serverSelectionTimeoutMS': 10000,
-                'connectTimeoutMS': 10000,
+if is_render:
+    # Render deployment - use PostgreSQL database
+    # Render automatically provides these environment variables for PostgreSQL:
+    # DATABASE_URL=postgresql://user:pass@host:port/dbname
+    try:
+        import dj_database_url
+        DATABASE_URL = config(
+            'DATABASE_URL',
+            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
+        )
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+        print("🐘 Using PostgreSQL on Render")
+    except ImportError:
+        # Fallback if dj-database-url not installed (shouldn't happen in production)
+        DATABASE_URL = config(
+            'DATABASE_URL',
+            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
+        )
+        # Parse connection string manually
+        from urllib.parse import urlparse
+        db_url = urlparse(DATABASE_URL)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': db_url.path[1:],  # Remove leading /
+                'USER': db_url.username,
+                'PASSWORD': db_url.password,
+                'HOST': db_url.hostname,
+                'PORT': db_url.port or 5432,
             }
         }
-    }
-    print("🍃 Using MongoDB Atlas as primary database for Django ORM")
+        print("🐘 Using PostgreSQL on Render (fallback config)")
 else:
-    # Fallback: SQLite for Django ORM + MongoDB Atlas for additional data
-    # Set USE_MONGODB_ONLY=False to use this hybrid approach
+    # Local development - use SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    print("🏠 Hybrid mode - SQLite for Django ORM + MongoDB Atlas for additional data")
+    print("🏠 Local development - using SQLite")
 
 # MongoDB Atlas configuration for additional data storage
 # Priority: environment variable > .env file > default Atlas URI

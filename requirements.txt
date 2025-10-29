@@ -7,8 +7,10 @@ PyPDF2==3.0.1
 python-docx==1.2.0
 python-pptx==1.0.2
 openai==1.107.2
-pymongo==4.6.1
-mongoengine==0.28.2
-djongo==1.3.6
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
 gunicorn==21.2.0
 whitenoise==6.6.0
+# Optional: MongoDB support (keep for mongodb_utils.py)
+pymongo==4.6.1
+mongoengine==0.28.2
