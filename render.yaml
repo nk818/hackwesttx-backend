@@ -3,7 +3,7 @@ services:
     name: hackwesttx-backend
     env: python
     plan: free
-    buildCommand: pip install --upgrade pip setuptools wheel && pip install psycopg2-binary==2.9.10 && pip install -r requirements.txt && python start_fresh.py && python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install psycopg2-binary==2.9.10 && pip install -r requirements.txt && python create_database.py && python start_fresh.py && python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
     startCommand: gunicorn hackwesttx.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DEBUG
