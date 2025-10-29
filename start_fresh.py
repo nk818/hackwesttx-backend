@@ -8,6 +8,7 @@ import sys
 import django
 from django.core.management import call_command
 from django.db import connection
+from django.conf import settings
 
 def start_fresh():
     """Start fresh with clean migrations"""
@@ -43,13 +44,40 @@ def start_fresh():
         # Verify tables exist
         print("🔍 Verifying database tables...")
         with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            tables = cursor.fetchall()
-            print(f"📊 Found {len(tables)} tables in database")
+            # Detect database engine and use appropriate query
+            db_engine = settings.DATABASES['default']['ENGINE']
             
-            # Check for api_user table
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='api_user';")
-            if not cursor.fetchone():
+            if 'postgresql' in db_engine:
+                # PostgreSQL query
+                cursor.execute("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
+                """)
+                tables = cursor.fetchall()
+                table_names = [table[0] for table in tables]
+                
+                # Check for api_user table
+                api_user_exists = 'api_user' in table_names
+                cursor.execute("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'api_user';
+                """)
+                api_user_check = cursor.fetchone()
+            else:
+                # SQLite query
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = cursor.fetchall()
+                table_names = [table[0] for table in tables]
+                
+                # Check for api_user table
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='api_user';")
+                api_user_check = cursor.fetchone()
+            
+            print(f"📊 Found {len(table_names)} tables in database")
+            
+            if not api_user_check:
                 print("❌ api_user table does not exist, trying to create it...")
                 call_command('migrate', 'api', '--fake-initial', verbosity=2)
             else:
