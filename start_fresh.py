@@ -58,7 +58,6 @@ def start_fresh():
                 table_names = [table[0] for table in tables]
                 
                 # Check for api_user table
-                api_user_exists = 'api_user' in table_names
                 cursor.execute("""
                     SELECT table_name 
                     FROM information_schema.tables 
