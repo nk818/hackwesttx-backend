@@ -13,7 +13,7 @@ def create_database():
     # Get database URL from environment
     database_url = os.environ.get(
         'DATABASE_URL',
-        'postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
+        'postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint_postures_learn'
     )
     
     # Parse the connection string

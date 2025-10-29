@@ -11,7 +11,7 @@ services:
       - key: SECRET_KEY
         value: django-insecure-change-this-in-production-$(date +%s)
       - key: DATABASE_URL
-        value: postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn
+        value: postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint_postures_learn
       - key: RENDER
         value: true
       - key: ALLOWED_HOSTS
