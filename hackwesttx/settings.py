@@ -83,7 +83,7 @@ if is_render:
         import dj_database_url
         DATABASE_URL = config(
             'DATABASE_URL',
-            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
+            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint_postures_learn'
         )
         # Use dj_database_url to parse connection string
         DATABASES = {
@@ -98,7 +98,7 @@ if is_render:
         # Fallback configuration
         DATABASE_URL = config(
             'DATABASE_URL',
-            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint-postures-learn'
+            default='postgresql://blueprint_postures_learn_user:FOlENaCbVYqr9ZwBOE5QEkSRxkKgp8Lv@dpg-d3s34rodl3ps73d29o70-a:5432/blueprint_postures_learn'
         )
         # Manual fallback configuration
         from urllib.parse import urlparse
