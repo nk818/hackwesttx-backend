@@ -3367,7 +3367,7 @@ def health_check(request):
         sqlite_status = f"error: {str(e)[:100]}"
     
     # Check if database file exists
-    db_path = settings.DATABASES['default']['NAME']
+    db_path = str(settings.DATABASES['default']['NAME'])  # Convert PosixPath to string
     db_exists = os.path.exists(db_path)
     db_size = os.path.getsize(db_path) if db_exists else 0
     

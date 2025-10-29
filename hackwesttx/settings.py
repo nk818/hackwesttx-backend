@@ -23,7 +23,7 @@ if is_railway:
     print("🚀 Railway deployment detected - ALLOWED_HOSTS set to ['*']")
 else:
     # Local development
-    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2', cast=lambda v: [s.strip() for s in v.split(',')])
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2,10.161.1.211', cast=lambda v: [s.strip() for s in v.split(',')])
     print("🏠 Local development - using specific ALLOWED_HOSTS")
 
 INSTALLED_APPS = [
@@ -72,50 +72,47 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackwesttx.wsgi.application'
 
 # Database configuration
-# Use SQLite for Django ORM, MongoDB Atlas for additional data storage
-is_render = os.environ.get('RENDER') == 'true'
+# Always use MongoDB Atlas for Django ORM (both local development and production)
+use_mongodb_only = config('USE_MONGODB_ONLY', default=True, cast=bool)
 
-if is_render:
-    # Render deployment - use MongoDB Atlas as primary database
-    # This ensures data persistence across deployments
+if use_mongodb_only:
+    # Use MongoDB Atlas as primary database for Django ORM
+    mongodb_uri = config('MONGODB_URI', default='mongodb+srv://adminN:nSkTkOFijiEWfdsoksd@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+    
+    # For mongodb+srv:// connections, SSL is automatically enabled
+    # djongo will handle the connection string directly
     DATABASES = {
         'default': {
             'ENGINE': 'djongo',
-            'NAME': 'hackwesttx_db',
+            'NAME': config('MONGODB_DATABASE', default='hackwesttx_db'),
+            'ENFORCE_SCHEMA': False,
             'CLIENT': {
-                'host': os.environ.get('MONGODB_URI', 'mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'),
-                'port': 27017,
-                'username': os.environ.get('MONGODB_USER', 'noahkueng1_db_user'),
-                'password': os.environ.get('MONGODB_PASSWORD', 'tc2FviW6Wa5kxjEO'),
-                'authSource': 'admin',
-                'authMechanism': 'SCRAM-SHA-1'
+                'host': mongodb_uri,
+                # SSL is automatically handled by mongodb+srv:// protocol
+                # Additional timeout settings
+                'serverSelectionTimeoutMS': 10000,
+                'connectTimeoutMS': 10000,
             }
         }
     }
-    print("🚀 Render deployment - using MongoDB Atlas as primary database for persistence")
-elif is_railway:
-    # Railway deployment - use SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/tmp/db.sqlite3',
-        }
-    }
-    print("🚀 Railway deployment - using SQLite database at /tmp/db.sqlite3")
+    print("🍃 Using MongoDB Atlas as primary database for Django ORM")
 else:
-    # Local development - use SQLite
+    # Fallback: SQLite for Django ORM + MongoDB Atlas for additional data
+    # Set USE_MONGODB_ONLY=False to use this hybrid approach
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    print("🏠 Local development - using SQLite database")
+    print("🏠 Hybrid mode - SQLite for Django ORM + MongoDB Atlas for additional data")
 
 # MongoDB Atlas configuration for additional data storage
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-MONGODB_DATABASE = 'hackwesttx_db'
-MONGODB_ENABLED = os.environ.get('MONGODB_ENABLED', 'True').lower() == 'true'
+# Priority: environment variable > .env file > default Atlas URI
+MONGODB_URI = config('MONGODB_URI', default='mongodb+srv://adminN:nSkTkOFijiEWfdsoksd@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+MONGODB_DATABASE = config('MONGODB_DATABASE', default='hackwesttx_db')
+MONGODB_ENABLED = config('MONGODB_ENABLED', default=True, cast=bool)
+MONGODB_TIMEOUT = config('MONGODB_TIMEOUT', default=10, cast=int)  # Connection timeout in seconds
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -159,7 +156,7 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:5173,http://10.0.2.2:8000', cast=lambda v: [s.strip() for s in v.split(',')])
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:5173,http://10.0.2.2:8000,http://10.161.1.211:8000', cast=lambda v: [s.strip() for s in v.split(',')])
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow all origins for development (remove in production)
@@ -167,10 +164,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # OpenAI API Key for file processing and summarization
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-
-# MongoDB Configuration
-MONGODB_URI = config('MONGODB_URI', default='mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-
-# MongoDB Connection Settings
-MONGODB_ENABLED = config('MONGODB_ENABLED', default=True if is_render else False, cast=bool)
-MONGODB_TIMEOUT = 5  # 5 second timeout for MongoDB connections

@@ -3,7 +3,7 @@ services:
     name: hackwesttx-backend
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python start_fresh.py && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements.txt && python start_fresh.py && python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
     startCommand: gunicorn hackwesttx.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DEBUG
@@ -13,11 +13,13 @@ services:
       - key: MONGODB_ENABLED
         value: True
       - key: MONGODB_URI
-        value: mongodb+srv://noahkueng1_db_user:tc2FviW6Wa5kxjEO@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - key: MONGODB_USER
-        value: noahkueng1_db_user
-      - key: MONGODB_PASSWORD
-        value: tc2FviW6Wa5kxjEO
+        value: mongodb+srv://adminN:nSkTkOFijiEWfdsoksd@cluster0.bn7mgbx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: MONGODB_DATABASE
+        value: hackwesttx_db
+      - key: MONGODB_TIMEOUT
+        value: "10"
+      - key: USE_MONGODB_ONLY
+        value: "True"
       - key: RENDER
         value: true
       - key: ALLOWED_HOSTS
